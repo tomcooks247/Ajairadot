@@ -5,6 +5,14 @@ many games such as GTA, Aguntok, RDR2, etc.
 The codebase is currently being re-written in C entirely from the groundup
 using OpenGL ES 3.0 for maximum compatibility across systems.
 
+--Building--
+
+As of now building is possible only through makefiles, cross-platform support
+will be included in the future with the help of cmake. As of now, to build the
+project one should use this command:
+-make
+this will produce an executable called app.
+
 --Libraries used--
 
 *  OpenGL
