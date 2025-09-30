@@ -9,9 +9,7 @@ using OpenGL ES 3.0 for maximum compatibility across systems.
 
 As of now building is possible only through makefiles, cross-platform support
 will be included in the future with the help of cmake. As of now, to build the
-project one should use this command:
--make
-this will produce an executable called app.
+project one should use this command "make" this will produce an executable called app.
 
 --Libraries used--
 
