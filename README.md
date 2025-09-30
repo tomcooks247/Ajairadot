@@ -20,9 +20,11 @@ using OpenGL ES 3.0 for maximum compatibility across systems.
 
 Contribution should be done by first taking a look at our codebase
 and then adopting our naming structure, commenting styles and general
-approach to programming itself.
+approach to programming itself. We have defined some places to put
+certain parts of code which must be followed while contributing.
 
 --To Do--
 
-! Make functions to do mundane tasks like creating VAOs, VBOs, etc.
-! Make a default shader to render basic meshes without lighting.
+*  Make functions to do mundane tasks like creating VAOs, VBOs, etc.
+*  Make structs to handle meshes.
+*  Include Assimp support for FBX and GLB/GLTF formats.
