@@ -1,17 +1,23 @@
---Overview--
+---
+# Overview
+---
 
 This is the codebase for the legendary game AgonC inspired by
 many games such as GTA, Aguntok, RDR2, etc.
 The codebase is currently being re-written in C entirely from the groundup
 using OpenGL ES 3.0 for maximum compatibility across systems.
 
---Building--
+---
+# Building
+---
 
 As of now building is possible only through makefiles, cross-platform support
 will be included in the future with the help of cmake. As of now, to build the
 project one should use this command "make" this will produce an executable called app.
 
---Libraries used--
+---
+# Libraries used
+---
 
 *  OpenGL
 *  GLFW
@@ -22,14 +28,18 @@ project one should use this command "make" this will produce an executable calle
 *  Stdlib
 *  Stdbool
 
---Contribution Policy--
+---
+# Contribution Policy
+---
 
 Contribution should be done by first taking a look at our codebase
 and then adopting our naming structure, commenting styles and general
 approach to programming itself. We have defined some places to put
 certain parts of code which must be followed while contributing.
 
---To Do--
+---
+# To Do
+---
 
 *  Make functions to do mundane tasks like creating VAOs, VBOs, etc.
 *  Make structs to handle meshes.
