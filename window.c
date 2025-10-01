@@ -1,113 +1,202 @@
-#include <GLES3/gl3.h>
+// main.c
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <stdio.h>
+#include <math.h>
+#include <cglm/cglm.h>
 
-// Global Variables
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb/stb_image.h>
 
-// Function Declarations
+// Shader source (for demo purposes, inlined)
+const char* vertexShaderSource = "#version 330 core\n"
+"layout (location = 0) in vec3 aPos;\n"
+"layout (location = 1) in vec2 aTexCoord;\n"
+"uniform mat4 model;\n"
+"uniform mat4 view;\n"
+"uniform mat4 projection;\n"
+"out vec2 TexCoord;\n"
+"void main()\n"
+"{\n"
+"   gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
+"   TexCoord = aTexCoord;\n"
+"}\0";
 
-static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
-void createVS(unsigned int* vs, const char *vss);
-void createFS(unsigned int* fs, const char *fss);
-void createSP(unsigned int* vs, unsigned int* fs, unsigned int* sp);
+const char* fragmentShaderSource = "#version 330 core\n"
+"in vec2 TexCoord;\n"
+"out vec4 FragColor;\n"
+"uniform sampler2D ourTexture;\n"
+"void main()\n"
+"{\n"
+"   FragColor = texture(ourTexture, TexCoord);\n"
+"}\n\0";
+
+float vertices[] = {
+    // positions          // texture coords
+    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+     0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+};
+
+unsigned int compileShader(GLenum type, const char* source) {
+    unsigned int shader = glCreateShader(type);
+    glShaderSource(shader, 1, &source, NULL);
+    glCompileShader(shader);
+    int success;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+    if(!success) {
+        char infoLog[512];
+        glGetShaderInfoLog(shader, 512, NULL, infoLog);
+        printf("Shader compile error: %s\n", infoLog);
+    }
+    return shader;
+}
 
 int main() {
-	glfwInit();
-	
-	// Defining which OpenGL version is going to be used
-	glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    // Init GLFW
+    if (!glfwInit()) {
+        printf("Failed to initialize GLFW\n");
+        return -1;
+    }
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	// Creating a window
-	int w = 800, h = 600;
-	GLFWwindow* window = glfwCreateWindow(w, h, "test", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(800, 600, "Spinning Cube", NULL, NULL);
+    if (!window) {
+        printf("Failed to create GLFW window\n");
+        glfwTerminate();
+        return -1;
+    }
+    glfwMakeContextCurrent(window);
 
-	// Making the created window root and setting
-	// Key callback functionalities for inputs
-	glfwMakeContextCurrent(window);
-	glfwSetKeyCallback(window, keyCallback);
+    // Init GLEW
+    if (glewInit() != GLEW_OK) {
+        printf("Failed to initialize GLEW\n");
+        return -1;
+    }
 
-	// The shaders are temporarily residing here now hardcoded
-	const char *vss = "#version 300 es\n"
-	"layout (location = 0) in vec3 aPos;\n"
-	"void main () {\n"
-	"	gl_Position = vec4(aPos, 1.0);\n"
-	"}";
+    // Build shaders
+    unsigned int vertexShader = compileShader(GL_VERTEX_SHADER, vertexShaderSource);
+    unsigned int fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
+    unsigned int shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
 
-	const char *fss = "#version 300 es\n"
-	"precision mediump float;\n"
-	"out vec4 FragColor;\n"
-	"void main () {\n"
-	"	FragColor = vec4(0.0, 1.0, 0.0, 1.0);\n"
-	"}";
+    // Setup VAO VBO
+    unsigned int VBO, VAO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
 
-	// Temporary variables to create a simple green triangle
-	unsigned int vs, fs, sp, vao, vbo;
-	float vertices[] = {
-		0.0, 0.5, 0.0,      // top
-		0.25, 0.0, 0.0,    //  right
-		-0.25, 0.0, 0.0   //   left
-	};
+    glBindVertexArray(VAO);
 
-	createVS(&vs, vss);
-	createFS(&fs, fss);
-	createSP(&vs, &fs, &sp);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-	glGenVertexArrays(1, &vao);
-	glGenBuffers(1, &vbo);
+    // position
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    // texcoord
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
-	glBindVertexArray(vao);
-	
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    // Texture
+    unsigned int texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float)*3, (void*)0 );
-	glEnableVertexAttribArray(0);
+    int width, height, nrChannels;
+    unsigned char *data = stbi_load("crate.jpg", &width, &height, &nrChannels, 0);
+    if (data) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    } else {
+        printf("Failed to load texture\n");
+    }
+    stbi_image_free(data);
 
-	// Render loop
-	while (!glfwWindowShouldClose(window)) {
-		glClearColor(0.0, 0.3, 1.0, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
 
-		glfwGetFramebufferSize(window, &w, &h);
-		glViewport(0, 0, w, h);
+    // Matrices
+    mat4 model, view, projection;
+    glm_mat4_identity(model);
+    glm_translate(view, (vec3){0.0f, 0.0f, -3.0f}); // move camera back
+    glm_perspective(glm_rad(45.0f), 800.0f/600.0f, 0.1f, 100.0f, projection);
 
-		glBindVertexArray(vao);
-		glUseProgram(sp);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+    // Render loop
+    while (!glfwWindowShouldClose(window)) {
+        float time = glfwGetTime();
 
-		glfwSwapBuffers(window);
-		glfwPollEvents();
-	}
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	// Cleaning up after the Render loop
-	glfwDestroyWindow(window);
-	glfwTerminate();
-}
+        glUseProgram(shaderProgram);
 
-//Function Definitions
+        // Rotate model
+        glm_mat4_identity(model);
+        glm_rotate(model, time, (vec3){0.5f, 1.0f, 0.0f});
 
-void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-		glfwSetWindowShouldClose(window, 1);
-	}
-}
+        // Send uniforms
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, (float*)model);
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"), 1, GL_FALSE, (float*)view);
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, (float*)projection);
 
-void createVS(unsigned int* vs, const char *vss) {
-	*vs = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(*vs, 1, &vss, NULL);
-	glCompileShader(*vs);
-}
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glBindVertexArray(VAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
 
-void createFS(unsigned int* fs, const char *fss) {
-	*fs = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(*fs, 1, &fss, NULL);
-	glCompileShader(*fs);
-}
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
 
-void createSP(unsigned int* vs, unsigned int* fs, unsigned int* sp) {
-	*sp = glCreateProgram();
-	glAttachShader(*sp, *vs);
-	glAttachShader(*sp, *fs);
-	glLinkProgram(*sp);
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+
+    glfwTerminate();
+    return 0;
 }

@@ -1,2 +1,2 @@
 main:
-	gcc window.c -lGL -lglfw -o app
+	gcc window.c -o app.exe -lglfw3 -lglew32 -lopengl32 -lgdi32 -lm
