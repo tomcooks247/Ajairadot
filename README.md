@@ -2,7 +2,7 @@
 # Overview
 ---
 
-This is the codebase for the legendary game Ajairadot inspired by
+This is the codebase for the legendary game ajairadot inspired by
 many games such as GTA, RDR2, etc.
 The codebase is currently being re-written in GDScript entirely from the groundup
 using OpenGL ES 3.0 for maximum compatibility across systems.
