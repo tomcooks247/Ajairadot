@@ -21,6 +21,11 @@ project one should use the build button, this will produce an executable called 
 
 *  Godot
 *  Blender
+*  Windows
+*  Linux
+*  Floorp
+*  Edge
+*  Mixamo
 
 ---
 # Contribution Policy
