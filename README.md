@@ -2,31 +2,25 @@
 # Overview
 ---
 
-This is the codebase for the legendary game AgonC inspired by
-many games such as GTA, Aguntok, RDR2, etc.
-The codebase is currently being re-written in C entirely from the groundup
+This is the codebase for the legendary game Ajairadot inspired by
+many games such as GTA, RDR2, etc.
+The codebase is currently being re-written in GDScript entirely from the groundup
 using OpenGL ES 3.0 for maximum compatibility across systems.
 
 ---
 # Building
 ---
 
-As of now building is possible only through makefiles, cross-platform support
-will be included in the future with the help of cmake. As of now, to build the
-project one should use this command "make" this will produce an executable called app.
+As of now building is possible only through source code, cross-platform support
+will be included in the future with the help of built-in tools. As of now, to build the
+project one should use the build button, this will produce an executable called whatever the project is called.
 
 ---
-# Libraries used
+# Softwares/Frameworks/Libraries used
 ---
 
-*  OpenGL
-*  GLFW
-*  Assimp
-*  Stb_Image_Implementation
-*  Cglm
-*  Stdio
-*  Stdlib
-*  Stdbool
+*  Godot
+*  Blender
 
 ---
 # Contribution Policy
@@ -41,6 +35,6 @@ certain parts of code which must be followed while contributing.
 # To Do
 ---
 
-*  Make functions to do mundane tasks like creating VAOs, VBOs, etc.
-*  Make structs to handle meshes.
-*  Include Assimp support for FBX and GLB/GLTF formats.
+*  Restore Shit.
+*  Make Menu.
+*  Add Cars.
